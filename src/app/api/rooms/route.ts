@@ -5,25 +5,50 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async () => {
   readDB();
+  const roomList = [];
+  let counter = 0;
+  for (const room of DB.rooms) {
+    roomList.push(room.roomId,room.roomName);
+    counter++;
+  }
   return NextResponse.json({
     ok: true,
-    //rooms:
-    //totalRooms:
+    rooms: roomList,
+    totalRooms: counter,
   });
 };
 
 export const POST = async (request: NextRequest) => {
   const payload = checkToken();
-
-  // return NextResponse.json(
-  //   {
-  //     ok: false,
-  //     message: "Invalid token",
-  //   },
-  //   { status: 401 }
-  // );
-
+  if(!payload) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "Invalid token",
+      },
+      { status: 401 }
+    );
+  }
   readDB();
+  const body = await request.json();
+  const {roomName} = body;
+  const foundroom = DB.find(
+    (x) => x.roomName === roomName);
+  if (foundroom) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: `Room ${roomName} already exists`,
+        },
+        { status: 400 }
+      );
+  }
+  DB.rooms.push(roomName);
+  return NextResponse.json({
+    ok: true,
+    // roomId,
+    message: `Room ${roomName} has been created`,
+  })
 
   // return NextResponse.json(
   //   {
